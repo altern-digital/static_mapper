@@ -24,12 +24,14 @@ dependencies:
 import 'package:static_mapper/static_mapper.dart';
 
 class User extends BaseJsonModel {
+  late final id = prop<String>('id');
+  late final name = prop<String>('name');
+  late final age = prop<int>('age', fallback: 0);
+  late final isActive = prop<bool>('isActive', fallback: false);
+
   User(super.json);
 
-  JsonProperty<String> get id => prop('id');
-  JsonProperty<String> get name => prop('name');
-  JsonProperty<int> get age => prop('age', fallback: 0);
-  JsonProperty<bool> get isActive => prop('isActive', fallback: false);
+  factory User.fromJson(Map<String, dynamic> j) => User(j);
 
   @override
   Map<String, dynamic> toJson() => json;
@@ -53,10 +55,12 @@ print(user.toJson());       // {id: 001, name: Bob, age: 42, isActive: false}
 
 ```dart
 class Post extends BaseJsonModel {
+  late final title = prop<String>('title');
+  late final author = obj<User>('author', fromJson: User.fromJson);
+
   Post(super.json);
 
-  JsonProperty<String> get title => prop('title');
-  JsonProperty<User?> get author => obj('author', fromJson: (json) => User(json));
+  factory Post.fromJson(Map<String, dynamic> j) => Post(j);
 
   @override
   Map<String, dynamic> toJson() => json;
@@ -67,6 +71,6 @@ class Post extends BaseJsonModel {
 
 MIT
 
----
+-----
 
 Made with ❤️ using Dart

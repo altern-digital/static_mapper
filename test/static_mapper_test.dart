@@ -1,49 +1,48 @@
 import 'package:static_mapper/static_mapper.dart';
 import 'package:test/test.dart';
 
-// --- Test Model Classes ---
-
-/// A simple User model extending BaseJsonModel.
 class User extends BaseJsonModel {
+  late final id = prop<String>('id');
+  late final name = prop<String>('name');
+  late final age = prop<int>('age', fallback: 0);
+  late final isActive = prop<bool>('isActive', fallback: false);
+
   User(super.json);
 
-  JsonProperty<String> get id => prop('id');
-  JsonProperty<String> get name => prop('name');
-  JsonProperty<int> get age => prop('age', fallback: 0);
-  JsonProperty<bool> get isActive => prop('isActive', fallback: false);
+  factory User.fromJson(Map<String, dynamic> j) => User(j);
 
   @override
   Map<String, dynamic> toJson() => json;
 }
 
-/// A simple Address model extending BaseJsonModel.
 class Address extends BaseJsonModel {
+  late final street = prop<String>('street');
+  late final city = prop<String>('city');
+  late final zipCode = prop<String>('zipCode');
+
   Address(super.json);
 
-  JsonProperty<String> get street => prop('street');
-  JsonProperty<String> get city => prop('city');
-  JsonProperty<String> get zipCode => prop('zipCode');
+  factory Address.fromJson(Map<String, dynamic> j) => Address(j);
 
   @override
   Map<String, dynamic> toJson() => json;
 }
 
-/// A model representing a Post, including a nested User object.
 class Post extends BaseJsonModel {
-  Post(super.json);
-
-  JsonProperty<String> get title => prop('title');
-  JsonProperty<String> get content => prop('content');
-  JsonProperty<DateTime> get createdAt => prop<DateTime>(
+  late final title = prop<String>('title');
+  late final content = prop<String>('content');
+  late final createdAt = prop<DateTime>(
     'createdAt',
     fromJson: (raw) => DateTime.parse(raw as String),
     toJson: (value) => value.toIso8601String(),
   );
-  JsonProperty<User?> get author =>
-      obj('author', fromJson: (json) => User(json));
-  JsonProperty<List<String>> get tags => prop('tags', fallback: []);
-  JsonProperty<List<Address>> get addresses =>
-      list('addresses', fromJson: (json) => Address(json));
+  late final author = obj<User>('author', fromJson: User.fromJson);
+  late final tags = prop<List<String>>('tags', fallback: []);
+  late final addresses = list<Address>('addresses', fromJson: Address.fromJson);
+
+  Post(super.json);
+
+  factory Post.fromJson(Map<String, dynamic> j) => Post(j);
 
   @override
   Map<String, dynamic> toJson() => json;
@@ -130,16 +129,13 @@ void main() {
     });
 
     test('User model should handle missing properties with fallback', () {
-      final userJson = {
-        'id': '456',
-        'name': 'Bob',
-      }; // age and isActive are missing
+      final userJson = {'id': '456', 'name': 'Bob'};
       final user = User(userJson);
 
       expect(user.id.value, '456');
       expect(user.name.value, 'Bob');
-      expect(user.age.value, 0); // Uses fallback
-      expect(user.isActive.value, false); // Uses fallback
+      expect(user.age.value, 0);
+      expect(user.isActive.value, false);
     });
 
     test('User model should update properties and reflect in json', () {
@@ -199,7 +195,6 @@ void main() {
         'title': 'Post without author',
         'content': 'Some content',
         'createdAt': '2024-07-04T15:00:00Z',
-        // 'author' is missing
       };
       final post = Post(postJson);
 
@@ -219,24 +214,20 @@ void main() {
       };
       final post = Post(postJson);
 
-      // Update nested author's name
       post.author.value?.name.value = 'Jane Smith';
       expect(post.author.value?.name.value, 'Jane Smith');
       expect(post.json['author']['name'], 'Jane Smith');
 
-      // Set a new author
       final newAuthorJson = {'id': 'author2', 'name': 'New Author', 'age': 25};
       post.author.value = User(newAuthorJson);
       expect(post.author.value?.name.value, 'New Author');
       expect(post.json['author']['name'], 'New Author');
       expect(post.json['author']['id'], 'author2');
 
-      // Update tags
       post.tags.value = ['updated', 'tags'];
       expect(post.tags.value, ['updated', 'tags']);
       expect(post.json['tags'], ['updated', 'tags']);
 
-      // Update addresses
       final newAddressJson = {
         'street': '456 Oak Ave',
         'city': 'Otherville',
@@ -264,10 +255,9 @@ void main() {
         'title': 'Post with missing addresses key',
         'content': 'Content',
         'createdAt': '2024-07-04T16:00:00Z',
-        // 'addresses' key is missing
       };
       final post = Post(postJson);
-      expect(post.addresses.value, isEmpty); // Uses fallback: <U>[]
+      expect(post.addresses.value, isEmpty);
     });
 
     test(
@@ -277,10 +267,10 @@ void main() {
           'title': 'Post with invalid addresses type',
           'content': 'Content',
           'createdAt': '2024-07-04T16:00:00Z',
-          'addresses': 'not a list', // Invalid type
+          'addresses': 'not a list',
         };
         final post = Post(postJson);
-        expect(post.addresses.value, isEmpty); // Uses fallback: <U>[]
+        expect(post.addresses.value, isEmpty);
       },
     );
 

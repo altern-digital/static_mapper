@@ -1,6 +1,6 @@
 name: static_mapper
 description: A Dart package for mapping JSON data to strongly typed models with minimal boilerplate.
-version: 1.0.0
+version: 1.0.1
 repository: https://github.com/altern-digital/static_mapper
 
 environment:

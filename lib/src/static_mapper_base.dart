@@ -11,19 +11,19 @@ class JsonProperty<T> {
     T? fallback,
     T Function(dynamic raw)? fromJson,
     dynamic Function(T value)? toJson,
-  }) : _fallback = fallback,
-       _fromJson = fromJson,
-       _toJson = toJson;
+  })  : _fallback = fallback,
+        _fromJson = fromJson,
+        _toJson = toJson;
 
   T get value {
     if (!_json.containsKey(_key)) {
-      if (_fallback != null) return _fallback;
+      if (_fallback != null) return _fallback!;
       throw StateError('Missing key `$_key`');
     }
     final raw = _json[_key];
     if (_fromJson != null) {
       // If fromJson is provided, use it to convert the raw value.
-      return _fromJson(raw);
+      return _fromJson!(raw);
     }
     if (raw is T) {
       // If raw value is already of type T, return it directly.
@@ -31,7 +31,7 @@ class JsonProperty<T> {
     }
     if (_fallback != null) {
       // If raw value is not T and fromJson is not provided, use fallback if available.
-      return _fallback;
+      return _fallback!;
     }
     // Fallback and custom fromJson not provided, and type mismatch.
     throw StateError('Expected `$_key` to be a $T but was ${raw.runtimeType}');
@@ -39,7 +39,7 @@ class JsonProperty<T> {
 
   set value(T newValue) {
     if (_toJson != null) {
-      _json[_key] = _toJson(newValue);
+      _json[_key] = _toJson!(newValue);
     } else {
       _json[_key] = newValue;
     }
@@ -58,13 +58,14 @@ abstract class BaseJsonModel {
     T? fallback,
     T Function(dynamic raw)? fromJson,
     dynamic Function(T value)? toJson,
-  }) => JsonProperty<T>(
-    json,
-    key,
-    fallback: fallback,
-    fromJson: fromJson,
-    toJson: toJson,
-  );
+  }) =>
+      JsonProperty<T>(
+        json,
+        key,
+        fallback: fallback,
+        fromJson: fromJson,
+        toJson: toJson,
+      );
 
   /// Creates a JsonProperty for a nested object extending BaseJsonModel,
   /// with an optional fallback object.
@@ -72,16 +73,17 @@ abstract class BaseJsonModel {
     String key, {
     required U Function(Map<String, dynamic>) fromJson,
     U? fallback, // Added optional fallback for obj
-  }) => JsonProperty<U?>(
-    json,
-    key,
-    fallback: fallback, // Pass fallback to JsonProperty
-    fromJson: (raw) {
-      if (raw is Map<String, dynamic>) return fromJson(raw);
-      return null;
-    },
-    toJson: (model) => model?.toJson(),
-  );
+  }) =>
+      JsonProperty<U?>(
+        json,
+        key,
+        fallback: fallback, // Pass fallback to JsonProperty
+        fromJson: (raw) {
+          if (raw is Map<String, dynamic>) return fromJson(raw);
+          return null;
+        },
+        toJson: (model) => model?.toJson(),
+      );
 
   /// Creates a JsonProperty for a list of nested objects extending BaseJsonModel,
   /// with an optional fallback list (defaults to an empty list).
@@ -89,21 +91,20 @@ abstract class BaseJsonModel {
     String key, {
     required U Function(Map<String, dynamic>) fromJson,
     List<U>? fallback, // Added optional fallback for list
-  }) => JsonProperty<List<U>>(
-    json,
-    key,
-    fallback:
-        fallback ?? <U>[], // Use provided fallback or default to empty list
-    fromJson: (raw) {
-      if (raw is List) {
-        return raw.whereType<Map<String, dynamic>>().map(fromJson).toList();
-      }
-      return <
-        U
-      >[]; // If raw is not a list, return an empty list based on common list behavior.
-    },
-    toJson: (models) => models.map((m) => m.toJson()).toList(),
-  );
+  }) =>
+      JsonProperty<List<U>>(
+        json,
+        key,
+        fallback:
+            fallback ?? <U>[], // Use provided fallback or default to empty list
+        fromJson: (raw) {
+          if (raw is List) {
+            return raw.whereType<Map<String, dynamic>>().map(fromJson).toList();
+          }
+          return <U>[]; // If raw is not a list, return an empty list based on common list behavior.
+        },
+        toJson: (models) => models.map((m) => m.toJson()).toList(),
+      );
 
   Map<String, dynamic> toJson();
 }
